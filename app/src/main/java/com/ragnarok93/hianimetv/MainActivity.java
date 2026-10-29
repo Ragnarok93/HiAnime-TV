@@ -135,8 +135,23 @@ public final class MainActivity extends Activity {
                 Toast.makeText(MainActivity.this, "Secure connection failed", Toast.LENGTH_SHORT).show();
             }
         });
-        if (state == null) web.loadUrl(HOME); else web.restoreState(state);
+        if (state == null) loadTvHome(); else web.restoreState(state);
         web.requestFocus();
+    }
+
+    private void loadTvHome() {
+        try (InputStream input = getAssets().open("tv-home.html");
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            String html = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            // Give the bundled interface the site's HTTPS origin so catalogue fetches
+            // use the same-origin cookie/session context in WebView.
+            web.loadDataWithBaseURL(HOME, html, "text/html", "UTF-8", HOME);
+        } catch (Exception e) {
+            web.loadUrl(HOME);
+        }
     }
 
     private void injectTvNavigation() {
