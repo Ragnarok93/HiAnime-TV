@@ -276,7 +276,9 @@ public final class MainActivity extends Activity {
                 web.evaluateJavascript(
                         "window.hianimeTvClosePlayer ? window.hianimeTvClosePlayer() : false",
                         value -> {
-                            if (!"true".equals(value) && web != null && web.canGoBack()) web.goBack();
+                            if ("true".equals(value) || web == null) return;
+                            if (web.canGoBack()) web.goBack();
+                            else finish();
                         });
                 return true;
             }
