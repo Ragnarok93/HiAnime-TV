@@ -20,8 +20,6 @@ const checks = [
   ['remote-friendly navigation controls', /id="navHome"/],
   ['catalogue request fallback handling', /fetch\(HOME,\{credentials:'include'\}\)\.catch/],
   ['strict HiAnime host validation', /host==='hianime\.ms'\|\|host\.endsWith\('\.hianime\.ms'\)/],
-  ['current and legacy watch URL formats', /function isWatch\(url\)\{return \/\\/watch\(\?:\\/\|-\)\/i\.test\(url\|\|'\'\)\}/],
-  ['episode pages excluded from catalogue cards', /\/watch\(\?:\\/\|-\)\/i\.test\(new URL\(href\)\.pathname\)/],
   ['favorites persistence', /hianime-tv-favorites/],
   ['watch-history persistence', /hianime-tv-history/],
   ['continue-watching shelf', /Continue Watching/],
@@ -44,6 +42,10 @@ for (const [name, pattern] of checks) {
   assert.match(html, pattern, `Missing expected feature: ${name}`);
   console.log(`PASS ${name}`);
 }
+assert.ok(html.includes("function isWatch(url){return /\\/watch(?:\\/|-)/i.test(url||'')}"), 'Must accept current /watch-title and legacy /watch/title paths');
+console.log('PASS current and legacy watch URL formats');
+assert.ok(html.includes("/\\/watch(?:\\/|-)/i.test(new URL(href).pathname)"), 'Must exclude episode pages from catalogue cards');
+console.log('PASS episode pages excluded from catalogue cards');
 const navigationChecks = [
   ['directional focus navigation', /window\.hianimeTvNavigate\s*=\s*function/],
   ['remote activation handler', /window\.hianimeTvActivate\s*=\s*activate/],
