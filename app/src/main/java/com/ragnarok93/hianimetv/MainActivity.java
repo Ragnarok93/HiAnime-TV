@@ -34,11 +34,17 @@ public final class MainActivity extends Activity {
     private View videoView;
     private WebChromeClient.CustomViewCallback videoCallback;
     private volatile boolean webHasEditableFocus = false;
+    private volatile boolean webHasPlayerFocus = false;
 
     public final class TvNavigationBridge {
         @JavascriptInterface
         public void setEditable(boolean editable) {
             webHasEditableFocus = editable;
+        }
+
+        @JavascriptInterface
+        public void setPlayerFocus(boolean focused) {
+            webHasPlayerFocus = focused;
         }
     }
 
@@ -244,7 +250,7 @@ public final class MainActivity extends Activity {
             }
             return false;
         }
-        if (web == null || error != null && error.getVisibility() == View.VISIBLE || webHasEditableFocus) return false;
+        if (web == null || error != null && error.getVisibility() == View.VISIBLE || webHasEditableFocus || webHasPlayerFocus) return false;
         String direction;
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_DPAD_LEFT: direction = "left"; break;
@@ -281,7 +287,7 @@ public final class MainActivity extends Activity {
             return true;
         }
         if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER
-                && !webHasEditableFocus && videoView == null) {
+                && !webHasEditableFocus && !webHasPlayerFocus && videoView == null) {
             web.evaluateJavascript("window.hianimeTvActivate && window.hianimeTvActivate()", null);
             return true;
         }
