@@ -66,7 +66,7 @@
     var cr = current && current !== document.body && current !== document.documentElement
       ? current.getBoundingClientRect() : null;
     if (!cr || cr.width < 1 || cr.height < 1) {
-      var initial = list.find(function (el) { return el.tagName !== 'VIDEO'; }) || list[0];
+      var initial = list.find(function (el) { return el.tagName !== 'VIDEO' && !editable(el); }) || list[0];
       return focus(initial);
     }
     var cx = cr.left + cr.width / 2, cy = cr.top + cr.height / 2;
@@ -157,7 +157,7 @@
   var observer = new MutationObserver(function () {
     if (!document.activeElement || document.activeElement === document.body ||
         document.activeElement === document.documentElement) {
-      var first = candidates().find(function (el) { return el.tagName !== 'VIDEO'; });
+      var first = candidates().find(function (el) { return el.tagName !== 'VIDEO' && !editable(el); });
       if (first) focus(first);
     }
   });
