@@ -19,6 +19,9 @@ new vm.Script(navigation, { filename: 'tv-navigation.js' });
 const checks = [
   ['remote-friendly navigation controls', /id="navHome"/],
   ['catalogue request fallback handling', /fetch\(HOME,\{credentials:'include'\}\)\.catch/],
+  ['catalogue cache persistence', /hianime-tv-catalogue/],
+  ['cached catalogue fallback', /Previously loaded catalogue/],
+  ['live catalogue retry from cache', /Retry live catalogue/],
   ['strict HiAnime host validation', /host==='hianime\.ms'\|\|host\.endsWith\('\.hianime\.ms'\)/],
   ['favorites persistence', /hianime-tv-favorites/],
   ['watch-history persistence', /hianime-tv-history/],
