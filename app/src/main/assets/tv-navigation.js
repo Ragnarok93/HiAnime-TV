@@ -3,7 +3,7 @@
   if (window.__hianimeTvNavInstalled) return;
   window.__hianimeTvNavInstalled = true;
 
-  var selector = 'a[href],button,input:not([type="hidden"]),select,textarea,[role="button"],[role="link"],[onclick],[tabindex]:not([tabindex="-1"]),video,[data-tv-focusable]';
+  var selector = 'a[href],button,input:not([type="hidden"]),select,textarea,iframe,[role="button"],[role="link"],[onclick],[tabindex]:not([tabindex="-1"]),video,[data-tv-focusable]';
   var style = document.createElement('style');
   style.textContent = [
     'html.tv-remote-mode :focus { outline: 3px solid #20e0b0 !important; outline-offset: 3px !important; }',
