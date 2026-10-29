@@ -6,6 +6,7 @@ A remote-first Android TV / Fire TV interface for browsing the live catalogue at
 
 - **Bundled TV interface:** HTML/CSS/JavaScript shipped in the APK; large focus targets and directional navigation for a TV remote.
 - **Live catalogue adapter:** reads the current homepage, browse cards, search results, title descriptions, and episode links from the configured website at runtime. The site markup is not a stable API, so a site redesign may require adapter updates.
+- **Graceful catalogue recovery:** caches the last non-empty catalogue locally and shows it with a retry action if the live site is unavailable. Continue Watching remains available from local history; cached links can become stale.
 - **In-app playback view:** episode selection opens a dedicated playback overlay inside the bundled TV interface and embeds the site's watch page in a player frame. The TV home/details UI remains underneath, and Back closes the overlay first. If the site blocks embedding, viewers can explicitly choose **Open full player** as a compatibility fallback. This preserves the site's session and server selection flow instead of extracting stream URLs.
 - **Fire TV shell:** fullscreen landscape activity, Leanback launcher entry, persistent WebView cookies/storage, remote Back handling, and fullscreen video callbacks.
 
