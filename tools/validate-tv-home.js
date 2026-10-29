@@ -42,9 +42,9 @@ const navigationChecks = [
   ['focus recovery after page updates', /new MutationObserver/],
 ];
 for (const [name, pattern] of navigationChecks) {
-  assert.match(navigation, pattern, \`Missing TV navigation behavior: \${name}\`);
-  console.log(\`PASS \${name}\`);
+  assert.match(navigation, pattern, `Missing TV navigation behavior: ${name}`);
+  console.log(`PASS ${name}`);
 }
 assert.match(navigation, /\]\.join\('\\n'\)/, 'TV focus stylesheet must join rules with actual newline separators');
 console.log('PASS TV focus stylesheet uses real line separators');
-console.log(\`PASS parsed \${scripts.length} inline script(s) and tv-navigation.js without syntax errors\`);
+console.log(`PASS parsed ${scripts.length} inline script(s) and tv-navigation.js without syntax errors`);
