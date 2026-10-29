@@ -7,6 +7,7 @@ const vm = require('node:vm');
 
 const html = fs.readFileSync('app/src/main/assets/tv-home.html', 'utf8');
 const navigation = fs.readFileSync('app/src/main/assets/tv-navigation.js', 'utf8');
+const androidShell = fs.readFileSync('app/src/main/java/com/ragnarok93/hianimetv/MainActivity.java', 'utf8');
 const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
 assert.ok(scripts.length > 0, 'TV home must contain an inline application script');
 
@@ -57,4 +58,14 @@ for (const [name, pattern] of navigationChecks) {
 }
 assert.match(navigation, /\]\.join\('\\n'\)/, 'TV focus stylesheet must join rules with actual newline separators');
 console.log('PASS TV focus stylesheet uses real line separators');
+const shellChecks = [
+  ['Back closes playback before navigating away', /hianimeTvClosePlayer[\\s\\S]*if \(!"true"\.equals\(value\)\)/],
+  ['Back exits the app when no history remains', /if \(web\.canGoBack\(\)\) web\.goBack\(\);\\s*else finish\(\);/],
+  ['fullscreen playback custom view is supported', /onShowCustomView/],
+  ['WebView process errors are not falsely reported as tested', /onReceivedError/],
+];
+for (const [name, pattern] of shellChecks) {
+  assert.match(androidShell, pattern, `Missing Android shell behavior: ${name}`);
+  console.log(`PASS ${name}`);
+}
 console.log(`PASS parsed ${scripts.length} inline script(s) and tv-navigation.js without syntax errors`);
