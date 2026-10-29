@@ -1,6 +1,13 @@
 # HiAnime TV
 
-A lightweight Android TV / Fire TV wrapper for the existing website at https://hianime.ms/. It loads the live site in Android WebView instead of recreating its catalogue, backend, or player.
+A remote-first Android TV / Fire TV interface for browsing the live catalogue at [hianime.ms](https://hianime.ms/). The app now opens a locally bundled 10-foot UI with a large featured area, horizontal poster shelves, search, anime details, and episode selection rather than dropping viewers straight into the touch-oriented website.
+
+## How it works
+
+- **Bundled TV interface:** HTML/CSS/JavaScript shipped in the APK; large focus targets and directional navigation for a TV remote.
+- **Live catalogue adapter:** reads the current homepage, browse cards, search results, title descriptions, and episode links from the configured website at runtime. The site markup is not a stable API, so a site redesign may require adapter updates.
+- **Playback compatibility:** episode selection hands off to the site's own watch page/player inside the existing WebView. This preserves the site's session, player and server selection flow instead of extracting stream URLs.
+- **Fire TV shell:** fullscreen landscape activity, Leanback launcher entry, persistent WebView cookies/storage, remote Back handling, and fullscreen video callbacks.
 
 Target: Fire OS 6 / Android API 25-class devices, including Toshiba Fire TV AFTBAMR311. The app targets API 28 for legacy compatibility and supports Android API 21+.
 
@@ -27,6 +34,8 @@ adb install -r app-debug.apk
 
 The debug package name is `com.ragnarok93.hianimetv.debug`.
 
-Features include an Android TV launcher entry, fullscreen landscape UI, WebView cookies and DOM storage, remote Back navigation, and HTML5 fullscreen callbacks. The wrapper relies on the TV's installed System WebView and the live site; older WebView/player/codec limitations may prevent some playback paths from working. No website assets or video content are bundled.
+## Limitations
+
+Catalogue parsing depends on the live site's HTML structure and may need maintenance if that changes. Playback remains the site's own page, not a custom native streaming engine. The build can be verified in CI, but actual D-pad behavior and playback must still be tested on the target TV.
 
 This project does not claim affiliation with the website operators or rights holders. Use the site and its content only where permitted by applicable law and the site's terms.

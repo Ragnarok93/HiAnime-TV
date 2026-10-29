@@ -10,6 +10,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -32,6 +33,14 @@ public final class MainActivity extends Activity {
     private TextView error;
     private View videoView;
     private WebChromeClient.CustomViewCallback videoCallback;
+    private volatile boolean webHasEditableFocus = false;
+
+    public final class TvNavigationBridge {
+        @JavascriptInterface
+        public void setEditable(boolean editable) {
+            webHasEditableFocus = editable;
+        }
+    }
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -60,6 +69,7 @@ public final class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        web.addJavascriptInterface(new TvNavigationBridge(), "HiAnimeTvBridge");
         CookieManager cookies = CookieManager.getInstance();
         cookies.setAcceptCookie(true);
         cookies.setAcceptThirdPartyCookies(web, true);
@@ -88,7 +98,12 @@ public final class MainActivity extends Activity {
                 if (videoView != null) { callback.onCustomViewHidden(); return; }
                 videoView = view;
                 videoCallback = callback;
+                // The fullscreen player is a separate custom view; the hidden WebView
+                // no longer receives DPAD/SELECT focus while this view is active.
+                view.setFocusable(true);
+                view.setFocusableInTouchMode(true);
                 ((FrameLayout) getWindow().getDecorView()).addView(view, new FrameLayout.LayoutParams(-1, -1));
+                view.requestFocus();
                 web.setVisibility(View.GONE);
                 progress.setVisibility(View.GONE);
                 immersive();
@@ -120,8 +135,23 @@ public final class MainActivity extends Activity {
                 Toast.makeText(MainActivity.this, "Secure connection failed", Toast.LENGTH_SHORT).show();
             }
         });
-        if (state == null) web.loadUrl(HOME); else web.restoreState(state);
+        if (state == null) loadTvHome(); else web.restoreState(state);
         web.requestFocus();
+    }
+
+    private void loadTvHome() {
+        try (InputStream input = getAssets().open("tv-home.html");
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            String html = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            // Give the bundled interface the site's HTTPS origin so catalogue fetches
+            // use the same-origin cookie/session context in WebView.
+            web.loadDataWithBaseURL(HOME, html, "text/html", "UTF-8", HOME);
+        } catch (Exception e) {
+            web.loadUrl(HOME);
+        }
     }
 
     private void injectTvNavigation() {
@@ -170,18 +200,68 @@ public final class MainActivity extends Activity {
         immersive();
     }
 
-    private void immersive() {
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    private boolean isMenuKey(int keyCode) {
+        return keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_SETTINGS;
     }
 
-    private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    private boolean handleTvMenu(KeyEvent event) {
+        if (!isMenuKey(event.getKeyCode())) return false;
+        if (videoView != null) {
+            // Give the active fullscreen player first chance to reveal its own controls/settings.
+            boolean handled = false;
+            try { handled = videoView.dispatchKeyEvent(event); } catch (Exception ignored) {}
+            if (event.getAction() == KeyEvent.ACTION_UP && !handled && web != null) {
+                web.evaluateJavascript("window.hianimeTvMenu && window.hianimeTvMenu('player')", null);
+            }
+            // Don't let Fire OS consume the remote's MENU key while our video is fullscreen.
+            return true;
+        }
+        if (event.getAction() == KeyEvent.ACTION_UP && web != null) {
+            web.evaluateJavascript("window.hianimeTvMenu && window.hianimeTvMenu('site')", null);
+        }
+        return true;
+    }
+
+    private boolean handleTvDpad(KeyEvent event) {
+        if (videoView != null) {
+            int key = event.getKeyCode();
+            if (key == KeyEvent.KEYCODE_DPAD_LEFT || key == KeyEvent.KEYCODE_DPAD_RIGHT
+                    || key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
+                    || key == KeyEvent.KEYCODE_DPAD_CENTER || key == KeyEvent.KEYCODE_ENTER
+                    || key == KeyEvent.KEYCODE_NUMPAD_ENTER || key == KeyEvent.KEYCODE_SPACE) {
+                boolean handled = false;
+                try {
+                    if (!videoView.hasFocus()) videoView.requestFocus();
+                    handled = videoView.dispatchKeyEvent(event);
+                } catch (Exception ignored) {}
+                if (!handled && web != null) {
+                    // Fallback for WebView-backed players whose fullscreen custom view
+                    // does not consume remote keys; JS can reach only same-origin frames.
+                    web.evaluateJavascript("window.hianimeTvPlayerKey && window.hianimeTvPlayerKey("
+                            + key + ", " + event.getAction() + ")", null);
+                }
+                return true;
+            }
+            return false;
+        }
+        if (web == null || error != null && error.getVisibility() == View.VISIBLE || webHasEditableFocus) return false;
+        String direction;
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_DPAD_LEFT: direction = "left"; break;
+            case KeyEvent.KEYCODE_DPAD_RIGHT: direction = "right"; break;
+            case KeyEvent.KEYCODE_DPAD_UP: direction = "up"; break;
+            case KeyEvent.KEYCODE_DPAD_DOWN: direction = "down"; break;
+            default: return false;
+        }
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            web.evaluateJavascript("window.hianimeTvNavigate && window.hianimeTvNavigate('" + direction + "')", null);
+        }
+        return true;
     }
 
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if (handleTvMenu(e)) return true;
+        if (handleTvDpad(e)) return true;
         if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             if (videoView != null) { hideVideo(); return true; }
             if (web != null && web.canGoBack()) { web.goBack(); return true; }
@@ -191,7 +271,23 @@ public final class MainActivity extends Activity {
             web.reload();
             return true;
         }
+        if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER
+                && !webHasEditableFocus && videoView == null) {
+            web.evaluateJavascript("window.hianimeTvActivate && window.hianimeTvActivate()", null);
+            return true;
+        }
         return super.dispatchKeyEvent(e);
+    }
+
+    private void immersive() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     @Override protected void onSaveInstanceState(Bundle out) {
