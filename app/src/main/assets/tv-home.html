@@ -21,7 +21,9 @@ function abs(v){try{return new URL(v,HOME).href}catch(e){return ''}}
 function clean(s){return (s||'').replace(/\s+/g,' ').trim()}
 function isWatch(url){return /\/watch\//i.test(url||'')}
 function sameSite(url){try{return new URL(url).hostname.endsWith('hianime.ms')}catch(e){return false}}
-function saveWatchHistory(){try{localStorage.setItem('hianime-tv-history',JSON.stringify(watchHistory))}catch(e){}}\nfunction rememberWatch(item,episode){var entry={title:item.title,url:item.url,image:item.image||'',meta:item.meta||'',resumeUrl:episode.url,episodeLabel:episode.label||'Continue watching'};watchHistory=[entry].concat(watchHistory.filter(function(x){return x.url!==item.url})).slice(0,12);saveWatchHistory()}\nfunction saveFavorites(){try{localStorage.setItem('hianime-tv-favorites',JSON.stringify(favorites))}catch(e){}}
+function saveWatchHistory(){try{localStorage.setItem('hianime-tv-history',JSON.stringify(watchHistory))}catch(e){}}
+function rememberWatch(item,episode){var entry={title:item.title,url:item.url,image:item.image||'',meta:item.meta||'',resumeUrl:episode.url,episodeLabel:episode.label||'Continue watching'};watchHistory=[entry].concat(watchHistory.filter(function(x){return x.url!==item.url})).slice(0,12);saveWatchHistory()}
+function saveFavorites(){try{localStorage.setItem('hianime-tv-favorites',JSON.stringify(favorites))}catch(e){}}
 function isFavorite(item){return favorites.some(function(x){return x.url===item.url})}
 function toggleFavorite(item){if(isFavorite(item))favorites=favorites.filter(function(x){return x.url!==item.url});else favorites.unshift({title:item.title,url:item.url,image:item.image||'',meta:item.meta||''});saveFavorites();return isFavorite(item)}
 function showFavorites(){hero.classList.add('hide');title.textContent='My favorites';var list=favorites.slice();renderRows(list.length?[{name:'Saved anime',items:list}]:[],list,list.length?'':'No favorites saved yet. Open an anime and choose “Add to favorites” to save it.')}
