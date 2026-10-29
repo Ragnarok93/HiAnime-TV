@@ -31,7 +31,6 @@ const checks = [
   ['Continue Watching opens embedded playback', /if\(item\.resumeUrl\)playEpisode/],
   ['playback overlay closes through app navigation', /window\.hianimeTvClosePlayer=function/],
   ['embedded player receives remote focus', /setPlayerFocus\(true\)/],
-  ['iframe is a TV focus target', /textarea,iframe,\[role="button"\]/],
 ];
 
 for (const [name, pattern] of checks) {
@@ -46,6 +45,7 @@ const navigationChecks = [
   ['player D-pad fallback', /window\.hianimeTvPlayerKey\s*=\s*function/],
   ['MENU action handler', /window\.hianimeTvMenu\s*=\s*menuAction/],
   ['focus recovery after page updates', /new MutationObserver/],
+  ['iframe is a TV focus target', /textarea,iframe,\[role="button"\]/],
 ];
 for (const [name, pattern] of navigationChecks) {
   assert.match(navigation, pattern, `Missing TV navigation behavior: ${name}`);
