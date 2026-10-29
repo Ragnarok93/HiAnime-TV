@@ -31,6 +31,10 @@ const checks = [
   ['Continue Watching opens embedded playback', /if\(item\.resumeUrl\)playEpisode/],
   ['playback overlay closes through app navigation', /window\.hianimeTvClosePlayer=function/],
   ['embedded player receives remote focus', /setPlayerFocus\(true\)/],
+  ['embedded player loading status', /Loading episode player/],
+  ['embedded player reload control', /Reload player/],
+  ['slow-player recovery message', /taking longer than expected/],
+  ['player load and error feedback', /frame\.addEventListener\('load'/],
 ];
 
 for (const [name, pattern] of checks) {
