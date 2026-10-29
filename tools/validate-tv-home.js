@@ -22,7 +22,7 @@ const checks = [
   ['favorites persistence', /hianime-tv-favorites/],
   ['watch-history persistence', /hianime-tv-history/],
   ['continue-watching shelf', /Continue Watching/],
-  ['episode selection remembers history', /rememberWatch\(item,ep\);location\.href=ep\.url/],
+  ['episode selection routes through embedded player', /b\.onclick=function\(\)\{playEpisode\(item,ep\)\}/],
   ['browser back-state handling', /addEventListener\('popstate'/],
   ['search form', /id="searchForm"/],
   ['retry control for catalogue failures', /id="retry"/],
