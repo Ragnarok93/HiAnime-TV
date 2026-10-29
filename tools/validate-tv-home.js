@@ -32,6 +32,19 @@ for (const [name, pattern] of checks) {
   assert.match(html, pattern, `Missing expected feature: ${name}`);
   console.log(`PASS ${name}`);
 }
-assert.match(navigation, /\]\.join\('\\n'\)/, 'TV focus stylesheet must join rules with actual newline separators');
+const navigationChecks = [
+  ['directional focus navigation', /window\\.hianimeTvNavigate\\s*=\\s*function/],
+  ['remote activation handler', /window\\.hianimeTvActivate\\s*=\\s*activate/],
+  ['editable-field focus synchronization', /HiAnimeTvBridge\\.setEditable/],
+  ['visible and enabled focus filtering', /function rendered\\(el\\)/],
+  ['player D-pad fallback', /window\\.hianimeTvPlayerKey\\s*=\\s*function/],
+  ['MENU action handler', /window\\.hianimeTvMenu\\s*=\\s*menuAction/],
+  ['focus recovery after page updates', /new MutationObserver/],
+];
+for (const [name, pattern] of navigationChecks) {
+  assert.match(navigation, pattern, `Missing TV navigation behavior: ${name}`);
+  console.log(`PASS ${name}`);
+}
+assert.match(navigation, /\\]\\.join\\('\\\\n'\\)/, 'TV focus stylesheet must join rules with actual newline separators');
 console.log('PASS TV focus stylesheet uses real line separators');
 console.log(`PASS parsed ${scripts.length} inline script(s) and tv-navigation.js without syntax errors`);
