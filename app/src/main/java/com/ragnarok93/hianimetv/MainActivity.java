@@ -21,6 +21,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.graphics.Color;
 import android.widget.Toast;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public final class MainActivity extends Activity {
     private static final String HOME = "https://hianime.ms/";
@@ -102,6 +105,9 @@ public final class MainActivity extends Activity {
                 error.setVisibility(View.GONE);
                 progress.setVisibility(View.VISIBLE);
             }
+            @Override public void onPageFinished(WebView v, String url) {
+                injectTvNavigation();
+            }
             @Override public void onReceivedError(WebView v, WebResourceRequest request, android.webkit.WebResourceError e) {
                 if (request.isForMainFrame()) showError();
             }
@@ -116,6 +122,20 @@ public final class MainActivity extends Activity {
         });
         if (state == null) web.loadUrl(HOME); else web.restoreState(state);
         web.requestFocus();
+    }
+
+    private void injectTvNavigation() {
+        if (web == null) return;
+        try (InputStream input = getAssets().open("tv-navigation.js");
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            String script = new String(output.toByteArray(), StandardCharsets.UTF_8);
+            web.evaluateJavascript(script, null);
+        } catch (Exception ignored) {
+            // Keep the website usable if the optional TV navigation helper cannot load.
+        }
     }
 
     private boolean route(String raw) {
