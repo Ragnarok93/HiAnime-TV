@@ -26,11 +26,12 @@ const checks = [
   ['browser back-state handling', /addEventListener\('popstate'/],
   ['search form', /id="searchForm"/],
   ['retry control for catalogue failures', /id="retry"/],
-  ['TV focus stylesheet uses real line separators', /\]\.join\('\\\\n'\)/],
 ];
 
 for (const [name, pattern] of checks) {
   assert.match(html, pattern, `Missing expected feature: ${name}`);
   console.log(`PASS ${name}`);
 }
+assert.match(navigation, /\]\.join\('\\n'\)/, 'TV focus stylesheet must join rules with actual newline separators');
+console.log('PASS TV focus stylesheet uses real line separators');
 console.log(`PASS parsed ${scripts.length} inline script(s) and tv-navigation.js without syntax errors`);
