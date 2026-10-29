@@ -90,7 +90,7 @@ public final class MainActivity extends Activity {
                 progress.setVisibility(View.GONE);
                 immersive();
             }
-            @Override public void onHideCustomView() { hideVideo(); }
+            @Override public void onHideCustomView() { hideVideo(false); }
         });
         web.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
@@ -137,12 +137,14 @@ public final class MainActivity extends Activity {
         error.requestFocus();
     }
 
-    private void hideVideo() {
+    private void hideVideo() { hideVideo(true); }
+
+    private void hideVideo(boolean notifyChrome) {
         if (videoView == null) return;
         ((FrameLayout) getWindow().getDecorView()).removeView(videoView);
         videoView = null;
         web.setVisibility(View.VISIBLE);
-        if (videoCallback != null) videoCallback.onCustomViewHidden();
+        if (notifyChrome && videoCallback != null) videoCallback.onCustomViewHidden();
         videoCallback = null;
         web.requestFocus();
         immersive();
