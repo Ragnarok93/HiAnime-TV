@@ -179,7 +179,7 @@
       catch (_) { return false; }
     }
     // Explicit menu links navigate, while hamburger/drawer controls toggle in place.
-    var menuLinks = document.querySelectorAll('a[href*="/menu"], a[href$="#menu"], a[aria-label*="menu" i]');
+    var menuLinks = document.querySelectorAll('a[href*="/menu"], a[href$="#menu"]');
     for (var i = 0; i < menuLinks.length; i++) {
       var link = menuLinks[i];
       if (rendered(link) && !/login|account|profile/i.test((link.innerText || '') + ' ' + (link.getAttribute('aria-label') || ''))) {
@@ -189,7 +189,7 @@
     var siteToggle = firstRendered([
       'button[aria-label*="navigation" i]', '[role="button"][aria-label*="navigation" i]',
       'button[aria-label*="menu" i]', '[role="button"][aria-label*="menu" i]',
-      'button[title*="menu" i]', '[class*="hamburger" i]',
+      'a[aria-label*="menu" i]', 'button[title*="menu" i]', '[class*="hamburger" i]',
       '.navbar-toggler', '.menu-toggle', '.toggle-menu',
       'header button', 'nav button'
     ]);
