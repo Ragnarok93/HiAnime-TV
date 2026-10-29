@@ -98,7 +98,22 @@ public final class MainActivity extends Activity {
                 if (videoView != null) { callback.onCustomViewHidden(); return; }
                 videoView = view;
                 videoCallback = callback;
+                // The fullscreen player is a separate custom view; the hidden WebView
+                // no longer receives DPAD/SELECT focus while this view is active.
+                view.setFocusable(true);
+                view.setFocusableInTouchMode(true);
+                view.setOnKeyListener((v, keyCode, event) -> {
+                    if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                            || keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                            || keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER
+                            || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER || keyCode == KeyEvent.KEYCODE_SPACE
+                            || keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_SETTINGS) {
+                        return v.dispatchKeyEvent(event);
+                    }
+                    return false;
+                });
                 ((FrameLayout) getWindow().getDecorView()).addView(view, new FrameLayout.LayoutParams(-1, -1));
+                view.requestFocus();
                 web.setVisibility(View.GONE);
                 progress.setVisibility(View.GONE);
                 immersive();
@@ -203,8 +218,20 @@ public final class MainActivity extends Activity {
     }
 
     private boolean handleTvDpad(KeyEvent event) {
-        if (web == null || videoView != null || error != null && error.getVisibility() == View.VISIBLE
-                || webHasEditableFocus) return false;
+        if (videoView != null) {
+            int key = event.getKeyCode();
+            if (key == KeyEvent.KEYCODE_DPAD_LEFT || key == KeyEvent.KEYCODE_DPAD_RIGHT
+                    || key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
+                    || key == KeyEvent.KEYCODE_DPAD_CENTER || key == KeyEvent.KEYCODE_ENTER
+                    || key == KeyEvent.KEYCODE_NUMPAD_ENTER || key == KeyEvent.KEYCODE_SPACE) {
+                try {
+                    if (!videoView.hasFocus()) videoView.requestFocus();
+                    return videoView.dispatchKeyEvent(event);
+                } catch (Exception ignored) { return false; }
+            }
+            return false;
+        }
+        if (web == null || error != null && error.getVisibility() == View.VISIBLE || webHasEditableFocus) return false;
         String direction;
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_DPAD_LEFT: direction = "left"; break;
