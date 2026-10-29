@@ -127,6 +127,54 @@
       if (window.HiAnimeTvBridge) window.HiAnimeTvBridge.setEditable(!!editable(el));
     } catch (_) {}
   }
+
+  function clickBest(selectors) {
+    for (var i = 0; i < selectors.length; i++) {
+      var matches = document.querySelectorAll(selectors[i]);
+      for (var j = 0; j < matches.length; j++) {
+        var el = matches[j];
+        if (!rendered(el)) continue;
+        var label = ((el.getAttribute('aria-label') || '') + ' ' +
+          (el.getAttribute('title') || '') + ' ' + (el.innerText || '') + ' ' +
+          (typeof el.className === 'string' ? el.className : '')).toLowerCase();
+        if (/close|dismiss|exit/.test(label) && /menu|setting|option/.test(label)) continue;
+        try { el.click(); return true; } catch (_) {}
+      }
+    }
+    return false;
+  }
+  function menuAction(mode) {
+    if (mode === 'player') {
+      // Works for same-origin player controls. Cross-origin fullscreen players
+      // receive the native MENU key first from MainActivity.
+      return clickBest([
+        'button[aria-label*="setting" i]', '[role="button"][aria-label*="setting" i]',
+        'button[title*="setting" i]', '[class*="setting" i][role="button"]',
+        'button[aria-label*="option" i]', '[role="button"][aria-label*="option" i]',
+        '.jw-icon-settings', '.plyr__control[ data-plyr="settings"]',
+        '.vjs-settings-button', '.shaka-settings-button',
+        'button[aria-label*="menu" i]', '[role="button"][aria-label*="menu" i]'
+      ]);
+    }
+    // Prefer an explicit site menu link if present, otherwise open the site's
+    // navigation drawer/hamburger control.
+    var menuLinks = document.querySelectorAll('a[href*="/menu"], a[href$="#menu"], a[aria-label*="menu" i]');
+    for (var i = 0; i < menuLinks.length; i++) {
+      var link = menuLinks[i];
+      if (rendered(link) && !/login|account|profile/i.test((link.innerText || '') + ' ' + (link.getAttribute('aria-label') || ''))) {
+        try { link.click(); return true; } catch (_) {}
+      }
+    }
+    return clickBest([
+      'button[aria-label*="navigation" i]', '[role="button"][aria-label*="navigation" i]',
+      'button[aria-label*="menu" i]', '[role="button"][aria-label*="menu" i]',
+      'button[title*="menu" i]', '[class*="hamburger" i]',
+      '.navbar-toggler', '.menu-toggle', '.toggle-menu',
+      'header button', 'nav button'
+    ]);
+  }
+  window.hianimeTvMenu = menuAction;
+
   window.hianimeTvNavigate = function (direction) { return move(direction); };
   window.hianimeTvActivate = activate;
   document.addEventListener('keydown', function (event) {
