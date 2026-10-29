@@ -180,6 +180,28 @@ public final class MainActivity extends Activity {
         immersive();
     }
 
+    private boolean isMenuKey(int keyCode) {
+        return keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_SETTINGS;
+    }
+
+    private boolean handleTvMenu(KeyEvent event) {
+        if (!isMenuKey(event.getKeyCode())) return false;
+        if (videoView != null) {
+            // Give the active fullscreen player first chance to reveal its own controls/settings.
+            boolean handled = false;
+            try { handled = videoView.dispatchKeyEvent(event); } catch (Exception ignored) {}
+            if (event.getAction() == KeyEvent.ACTION_UP && !handled && web != null) {
+                web.evaluateJavascript("window.hianimeTvMenu && window.hianimeTvMenu('player')", null);
+            }
+            // Don't let Fire OS consume the remote's MENU key while our video is fullscreen.
+            return true;
+        }
+        if (event.getAction() == KeyEvent.ACTION_UP && web != null) {
+            web.evaluateJavascript("window.hianimeTvMenu && window.hianimeTvMenu('site')", null);
+        }
+        return true;
+    }
+
     private boolean handleTvDpad(KeyEvent event) {
         if (web == null || videoView != null || error != null && error.getVisibility() == View.VISIBLE
                 || webHasEditableFocus) return false;
@@ -198,6 +220,7 @@ public final class MainActivity extends Activity {
     }
 
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if (handleTvMenu(e)) return true;
         if (handleTvDpad(e)) return true;
         if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             if (videoView != null) { hideVideo(); return true; }
