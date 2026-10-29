@@ -42,7 +42,12 @@ for (const [name, pattern] of checks) {
   assert.match(html, pattern, `Missing expected feature: ${name}`);
   console.log(`PASS ${name}`);
 }
-assert.ok(html.includes("function isWatch(url){return /\\/watch(?:\\/|-)/i.test(url||'')}"), 'Must accept current /watch-title and legacy /watch/title paths');
+const watchFunction = html.match(/function isWatch\(url\)\{[^}]+\}/);
+assert.ok(watchFunction, 'Watch URL matcher must exist');
+const isWatch = new Function(watchFunction[0] + '; return isWatch;')();
+assert.equal(isWatch('https://hianime.ms/watch-one-piece-episode-1-1a877'), true, 'Must accept current /watch-title URLs');
+assert.equal(isWatch('https://hianime.ms/watch/one-piece'), true, 'Must accept legacy /watch/title URLs');
+assert.equal(isWatch('https://hianime.ms/details/one-piece-1a877'), false, 'Must reject title details URLs as episodes');
 console.log('PASS current and legacy watch URL formats');
 assert.ok(html.includes("/\\/watch(?:\\/|-)/i.test(new URL(href).pathname)"), 'Must exclude episode pages from catalogue cards');
 console.log('PASS episode pages excluded from catalogue cards');
