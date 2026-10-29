@@ -10,7 +10,7 @@
     'html.tv-remote-mode a:focus, html.tv-remote-mode button:focus, html.tv-remote-mode [role="button"]:focus { box-shadow: 0 0 0 3px #20e0b0 !important; }',
     'html.tv-remote-mode .tv-remote-focused { outline: 4px solid #20e0b0 !important; outline-offset: 3px !important; box-shadow: 0 0 0 5px rgba(0,0,0,.9) !important; scroll-margin: 100px; }',
     'html.tv-remote-mode .tv-remote-focused img { filter: brightness(1.08); }'
-  ].join('\\n');
+  ].join('\n');
   (document.head || document.documentElement).appendChild(style);
   document.documentElement.classList.add('tv-remote-mode');
 
