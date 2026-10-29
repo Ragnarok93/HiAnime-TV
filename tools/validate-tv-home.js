@@ -20,6 +20,8 @@ const checks = [
   ['remote-friendly navigation controls', /id="navHome"/],
   ['catalogue request fallback handling', /fetch\(HOME,\{credentials:'include'\}\)\.catch/],
   ['strict HiAnime host validation', /host==='hianime\.ms'\|\|host\.endsWith\('\.hianime\.ms'\)/],
+  ['current and legacy watch URL formats', /function isWatch\(url\)\{return \/\\/watch\(\?:\\/\|-\)\/i\.test\(url\|\|'\'\)\}/],
+  ['episode pages excluded from catalogue cards', /\/watch\(\?:\\/\|-\)\/i\.test\(new URL\(href\)\.pathname\)/],
   ['favorites persistence', /hianime-tv-favorites/],
   ['watch-history persistence', /hianime-tv-history/],
   ['continue-watching shelf', /Continue Watching/],
