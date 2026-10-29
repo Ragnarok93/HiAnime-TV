@@ -22,6 +22,8 @@ const checks = [
   ['catalogue cache persistence', /hianime-tv-catalogue/],
   ['cached catalogue fallback', /Previously loaded catalogue/],
   ['live catalogue retry from cache', /Retry live catalogue/],
+  ['empty refresh preserves previous catalogue cache', /if\(items\.length\)\{try\{localStorage\.setItem\('hianime-tv-catalogue'/],
+  ['continue watching remains available from cache', /cachedRows\.unshift\(\{name:'Continue Watching',items:watchHistory\}\)/],
   ['strict HiAnime host validation', /host==='hianime\.ms'\|\|host\.endsWith\('\.hianime\.ms'\)/],
   ['favorites persistence', /hianime-tv-favorites/],
   ['watch-history persistence', /hianime-tv-history/],
