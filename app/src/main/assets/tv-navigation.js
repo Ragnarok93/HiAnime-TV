@@ -143,21 +143,42 @@
     }
     return false;
   }
+  var activeMenuMode = null;
+  var activeMenuToggle = null;
+  function firstRendered(selectors) {
+    for (var i = 0; i < selectors.length; i++) {
+      var matches = document.querySelectorAll(selectors[i]);
+      for (var j = 0; j < matches.length; j++) {
+        if (rendered(matches[j])) return matches[j];
+      }
+    }
+    return null;
+  }
   function menuAction(mode) {
+    // Re-pressing MENU closes the menu opened by the previous press whenever
+    // the site/player exposes the same toggle control.
+    if (activeMenuMode === mode && activeMenuToggle && rendered(activeMenuToggle)) {
+      try { activeMenuToggle.click(); activeMenuMode = null; activeMenuToggle = null; return true; }
+      catch (_) {}
+    }
+    activeMenuMode = null;
+    activeMenuToggle = null;
     if (mode === 'player') {
-      // Works for same-origin player controls. Cross-origin fullscreen players
-      // receive the native MENU key first from MainActivity.
-      return clickBest([
+      // Same-origin player controls only. MainActivity forwards native keys to
+      // the fullscreen custom view first for players hosted in cross-origin frames.
+      var playerToggle = firstRendered([
+        '.jw-icon-settings', '.plyr__control[data-plyr="settings"]',
+        '.vjs-settings-button', '.shaka-settings-button',
         'button[aria-label*="setting" i]', '[role="button"][aria-label*="setting" i]',
         'button[title*="setting" i]', '[class*="setting" i][role="button"]',
         'button[aria-label*="option" i]', '[role="button"][aria-label*="option" i]',
-        '.jw-icon-settings', '.plyr__control[ data-plyr="settings"]',
-        '.vjs-settings-button', '.shaka-settings-button',
         'button[aria-label*="menu" i]', '[role="button"][aria-label*="menu" i]'
       ]);
+      if (!playerToggle) return false;
+      try { playerToggle.click(); activeMenuMode = mode; activeMenuToggle = playerToggle; return true; }
+      catch (_) { return false; }
     }
-    // Prefer an explicit site menu link if present, otherwise open the site's
-    // navigation drawer/hamburger control.
+    // Explicit menu links navigate, while hamburger/drawer controls toggle in place.
     var menuLinks = document.querySelectorAll('a[href*="/menu"], a[href$="#menu"], a[aria-label*="menu" i]');
     for (var i = 0; i < menuLinks.length; i++) {
       var link = menuLinks[i];
@@ -165,13 +186,16 @@
         try { link.click(); return true; } catch (_) {}
       }
     }
-    return clickBest([
+    var siteToggle = firstRendered([
       'button[aria-label*="navigation" i]', '[role="button"][aria-label*="navigation" i]',
       'button[aria-label*="menu" i]', '[role="button"][aria-label*="menu" i]',
       'button[title*="menu" i]', '[class*="hamburger" i]',
       '.navbar-toggler', '.menu-toggle', '.toggle-menu',
       'header button', 'nav button'
     ]);
+    if (!siteToggle) return false;
+    try { siteToggle.click(); activeMenuMode = mode; activeMenuToggle = siteToggle; return true; }
+    catch (_) { return false; }
   }
   window.hianimeTvMenu = menuAction;
 
