@@ -15,6 +15,8 @@ jobs:
         with: { distribution: temurin, java-version: '17' }
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.7' }
+      - name: Validate TV frontend
+        run: node tools/validate-tv-home.js
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
       - name: Verify APK exists
