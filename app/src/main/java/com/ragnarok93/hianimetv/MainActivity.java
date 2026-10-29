@@ -102,16 +102,6 @@ public final class MainActivity extends Activity {
                 // no longer receives DPAD/SELECT focus while this view is active.
                 view.setFocusable(true);
                 view.setFocusableInTouchMode(true);
-                view.setOnKeyListener((v, keyCode, event) -> {
-                    if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
-                            || keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
-                            || keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER
-                            || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER || keyCode == KeyEvent.KEYCODE_SPACE
-                            || keyCode == KeyEvent.KEYCODE_MENU || keyCode == KeyEvent.KEYCODE_SETTINGS) {
-                        return v.dispatchKeyEvent(event);
-                    }
-                    return false;
-                });
                 ((FrameLayout) getWindow().getDecorView()).addView(view, new FrameLayout.LayoutParams(-1, -1));
                 view.requestFocus();
                 web.setVisibility(View.GONE);
