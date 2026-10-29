@@ -59,7 +59,7 @@ for (const [name, pattern] of navigationChecks) {
 assert.match(navigation, /\]\.join\('\\n'\)/, 'TV focus stylesheet must join rules with actual newline separators');
 console.log('PASS TV focus stylesheet uses real line separators');
 const shellChecks = [
-  ['Back closes playback before navigating away', /hianimeTvClosePlayer[\s\S]*if \(!"true"\.equals\(value\)\)/],
+  ['Back closes playback before navigating away', /hianimeTvClosePlayer[\s\S]*if \("true"\.equals\(value\) \|\| web == null\) return;/],
   ['Back exits the app when no history remains', /if \(web\.canGoBack\(\)\) web\.goBack\(\);\s*else finish\(\);],
   ['fullscreen playback custom view is supported', /onShowCustomView/],
   ['network failures show a recovery screen', /private void showError\(\)/],
