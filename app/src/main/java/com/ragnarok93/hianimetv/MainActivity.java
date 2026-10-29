@@ -1,0 +1,203 @@
+package com.ragnarok93.hianimetv;
+
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
+import android.net.http.SslError;
+import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.webkit.CookieManager;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.graphics.Color;
+import android.widget.Toast;
+
+public final class MainActivity extends Activity {
+    private static final String HOME = "https://hianime.ms/";
+    private WebView web;
+    private ProgressBar progress;
+    private TextView error;
+    private View videoView;
+    private WebChromeClient.CustomViewCallback videoCallback;
+
+    @Override public void onCreate(Bundle state) {
+        super.onCreate(state);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        immersive();
+
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(Color.BLACK);
+        web = new WebView(this);
+        web.setBackgroundColor(Color.BLACK);
+        web.setFocusable(true);
+        web.setFocusableInTouchMode(true);
+        web.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        WebSettings s = web.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
+        s.setLoadsImagesAutomatically(true);
+        s.setMediaPlaybackRequiresUserGesture(false);
+        s.setSupportZoom(false);
+        s.setBuiltInZoomControls(false);
+        s.setDisplayZoomControls(false);
+        s.setJavaScriptCanOpenWindowsAutomatically(false);
+        s.setSupportMultipleWindows(false);
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(true);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        CookieManager cookies = CookieManager.getInstance();
+        cookies.setAcceptCookie(true);
+        cookies.setAcceptThirdPartyCookies(web, true);
+
+        progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progress.setMax(100);
+        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        root.addView(progress, new FrameLayout.LayoutParams(-1, dp(3), android.view.Gravity.TOP));
+        error = new TextView(this);
+        error.setTextColor(Color.WHITE);
+        error.setTextSize(18);
+        error.setGravity(android.view.Gravity.CENTER);
+        error.setBackgroundColor(Color.BLACK);
+        error.setVisibility(View.GONE);
+        error.setFocusable(true);
+        error.setOnClickListener(v -> web.reload());
+        root.addView(error, new FrameLayout.LayoutParams(-1, -1));
+        setContentView(root);
+
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override public void onProgressChanged(WebView v, int value) {
+                progress.setProgress(value);
+                progress.setVisibility(value >= 100 ? View.GONE : View.VISIBLE);
+            }
+            @Override public void onShowCustomView(View view, CustomViewCallback callback) {
+                if (videoView != null) { callback.onCustomViewHidden(); return; }
+                videoView = view;
+                videoCallback = callback;
+                ((FrameLayout) getWindow().getDecorView()).addView(view, new FrameLayout.LayoutParams(-1, -1));
+                web.setVisibility(View.GONE);
+                progress.setVisibility(View.GONE);
+                immersive();
+            }
+            @Override public void onHideCustomView() { hideVideo(); }
+        });
+        web.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
+                return route(request.getUrl().toString());
+            }
+            @SuppressWarnings("deprecation")
+            @Override public boolean shouldOverrideUrlLoading(WebView v, String url) { return route(url); }
+            @Override public void onPageStarted(WebView v, String url, android.graphics.Bitmap icon) {
+                error.setVisibility(View.GONE);
+                progress.setVisibility(View.VISIBLE);
+            }
+            @Override public void onReceivedError(WebView v, WebResourceRequest request, android.webkit.WebResourceError e) {
+                if (request.isForMainFrame()) showError();
+            }
+            @SuppressWarnings("deprecation")
+            @Override public void onReceivedError(WebView v, int code, String description, String url) {
+                if (android.os.Build.VERSION.SDK_INT < 23) showError();
+            }
+            @Override public void onReceivedSslError(WebView v, SslErrorHandler handler, SslError e) {
+                handler.cancel();
+                Toast.makeText(MainActivity.this, "Secure connection failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+        if (state == null) web.loadUrl(HOME); else web.restoreState(state);
+        web.requestFocus();
+    }
+
+    private boolean route(String raw) {
+        Uri uri = Uri.parse(raw);
+        String scheme = uri.getScheme();
+        if (scheme == null || "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)
+                || "about".equalsIgnoreCase(scheme) || "blob".equalsIgnoreCase(scheme)
+                || "data".equalsIgnoreCase(scheme)) return false;
+        try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
+        catch (ActivityNotFoundException e) { Toast.makeText(this, "No app can open this link", Toast.LENGTH_SHORT).show(); }
+        catch (Exception e) { Toast.makeText(this, "Could not open this link", Toast.LENGTH_SHORT).show(); }
+        return true;
+    }
+
+    private void showError() {
+        progress.setVisibility(View.GONE);
+        error.setText("Can't load the website right now.\n\nCheck the TV's internet connection, then press SELECT to retry or BACK to leave.");
+        error.setVisibility(View.VISIBLE);
+        error.requestFocus();
+    }
+
+    private void hideVideo() {
+        if (videoView == null) return;
+        ((FrameLayout) getWindow().getDecorView()).removeView(videoView);
+        videoView = null;
+        web.setVisibility(View.VISIBLE);
+        if (videoCallback != null) videoCallback.onCustomViewHidden();
+        videoCallback = null;
+        web.requestFocus();
+        immersive();
+    }
+
+    private void immersive() {
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            if (videoView != null) { hideVideo(); return true; }
+            if (web != null && web.canGoBack()) { web.goBack(); return true; }
+        }
+        if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER
+                && error != null && error.getVisibility() == View.VISIBLE) {
+            web.reload();
+            return true;
+        }
+        return super.dispatchKeyEvent(e);
+    }
+
+    @Override protected void onSaveInstanceState(Bundle out) {
+        if (web != null) web.saveState(out);
+        super.onSaveInstanceState(out);
+    }
+
+    @Override protected void onPause() {
+        if (web != null) { web.onPause(); CookieManager.getInstance().flush(); }
+        super.onPause();
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        immersive();
+        if (web != null) web.onResume();
+    }
+
+    @Override protected void onDestroy() {
+        if (videoView != null) hideVideo();
+        if (web != null) {
+            web.stopLoading();
+            web.loadUrl("about:blank");
+            web.setWebChromeClient(null);
+            web.setWebViewClient(null);
+            web.destroy();
+            web = null;
+        }
+        super.onDestroy();
+    }
+}
