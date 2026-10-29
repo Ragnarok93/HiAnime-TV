@@ -30,6 +30,8 @@ const checks = [
   ['embedded episode player', /frame\.src=episode\.url/],
   ['Continue Watching opens embedded playback', /if\(item\.resumeUrl\)playEpisode/],
   ['playback overlay closes through app navigation', /window\.hianimeTvClosePlayer=function/],
+  ['embedded player receives remote focus', /setPlayerFocus\(true\)/],
+  ['iframe is a TV focus target', /textarea,iframe,\[role="button"\]/],
 ];
 
 for (const [name, pattern] of checks) {
