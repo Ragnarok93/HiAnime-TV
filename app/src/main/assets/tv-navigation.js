@@ -197,6 +197,42 @@
     try { siteToggle.click(); activeMenuMode = mode; activeMenuToggle = siteToggle; return true; }
     catch (_) { return false; }
   }
+  window.hianimeTvPlayerKey = function (keyCode, action) {
+    var keyNames = {
+      21: ['ArrowLeft', 'ArrowLeft'], 22: ['ArrowRight', 'ArrowRight'],
+      19: ['ArrowUp', 'ArrowUp'], 20: ['ArrowDown', 'ArrowDown'],
+      23: ['Enter', 'Enter'], 66: ['Enter', 'Enter'], 160: ['Enter', 'Enter'], 62: [' ', 'Space']
+    };
+    var spec = keyNames[keyCode];
+    if (!spec) return false;
+    function route(doc, depth) {
+      if (!doc || depth > 4) return false;
+      var target = doc.activeElement;
+      if (target && target.tagName === 'IFRAME') {
+        try { if (route(target.contentDocument, depth + 1)) return true; } catch (_) {}
+      }
+      if (!target || target === doc.body || target === doc.documentElement) {
+        var videos = doc.querySelectorAll('video, .jw-video, .plyr__video-wrapper, .html5-video-player');
+        for (var i = 0; i < videos.length; i++) {
+          if (rendered(videos[i])) { target = videos[i]; break; }
+        }
+      }
+      if (!target || target === doc.body || target === doc.documentElement) return false;
+      try { target.focus(); } catch (_) {}
+      var type = action === 0 ? 'keydown' : 'keyup';
+      var event = document.createEvent('Event');
+      event.initEvent(type, true, true);
+      try {
+        Object.defineProperty(event, 'key', {get: function () { return spec[0]; }});
+        Object.defineProperty(event, 'code', {get: function () { return spec[1]; }});
+        Object.defineProperty(event, 'keyCode', {get: function () { return keyCode; }});
+        Object.defineProperty(event, 'which', {get: function () { return keyCode; }});
+      } catch (_) {}
+      target.dispatchEvent(event);
+      return true;
+    }
+    return route(document, 0);
+  };
   window.hianimeTvMenu = menuAction;
 
   window.hianimeTvNavigate = function (direction) { return move(direction); };
