@@ -264,7 +264,16 @@ public final class MainActivity extends Activity {
         if (handleTvDpad(e)) return true;
         if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_BACK) {
             if (videoView != null) { hideVideo(); return true; }
-            if (web != null && web.canGoBack()) { web.goBack(); return true; }
+            if (web != null) {
+                // Let the bundled TV UI close its embedded playback overlay before
+                // falling back to ordinary WebView history navigation.
+                web.evaluateJavascript(
+                        "window.hianimeTvClosePlayer ? window.hianimeTvClosePlayer() : false",
+                        value -> {
+                            if (!"true".equals(value) && web != null && web.canGoBack()) web.goBack();
+                        });
+                return true;
+            }
         }
         if (e.getAction() == KeyEvent.ACTION_UP && e.getKeyCode() == KeyEvent.KEYCODE_DPAD_CENTER
                 && error != null && error.getVisibility() == View.VISIBLE) {
