@@ -214,10 +214,18 @@ public final class MainActivity extends Activity {
                     || key == KeyEvent.KEYCODE_DPAD_UP || key == KeyEvent.KEYCODE_DPAD_DOWN
                     || key == KeyEvent.KEYCODE_DPAD_CENTER || key == KeyEvent.KEYCODE_ENTER
                     || key == KeyEvent.KEYCODE_NUMPAD_ENTER || key == KeyEvent.KEYCODE_SPACE) {
+                boolean handled = false;
                 try {
                     if (!videoView.hasFocus()) videoView.requestFocus();
-                    return videoView.dispatchKeyEvent(event);
-                } catch (Exception ignored) { return false; }
+                    handled = videoView.dispatchKeyEvent(event);
+                } catch (Exception ignored) {}
+                if (!handled && web != null) {
+                    // Fallback for WebView-backed players whose fullscreen custom view
+                    // does not consume remote keys; JS can reach only same-origin frames.
+                    web.evaluateJavascript("window.hianimeTvPlayerKey && window.hianimeTvPlayerKey("
+                            + key + ", " + event.getAction() + ")", null);
+                }
+                return true;
             }
             return false;
         }
