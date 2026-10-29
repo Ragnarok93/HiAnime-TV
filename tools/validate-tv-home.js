@@ -26,6 +26,10 @@ const checks = [
   ['browser back-state handling', /addEventListener\('popstate'/],
   ['search form', /id="searchForm"/],
   ['retry control for catalogue failures', /id="retry"/],
+  ['episode playback remains in the TV shell', /function playEpisode\(item,episode\)/],
+  ['embedded episode player', /frame\.src=episode\.url/],
+  ['Continue Watching opens embedded playback', /if\(item\.resumeUrl\)playEpisode/],
+  ['playback overlay closes through app navigation', /window\.hianimeTvClosePlayer=function/],
 ];
 
 for (const [name, pattern] of checks) {
